@@ -1,5 +1,6 @@
-count_of_bad_rewievs: 0
-count_of_good_rewievs: 502
+count_of_bad_rewievs: 1000
+count_of_good_rewievs: 1000
 delay: 0
 film_id: 0
-page_num: 1
+page_num_bad: 1
+page_num_good: 6

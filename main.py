@@ -67,31 +67,44 @@ def get_page(link: str) -> BeautifulSoup:
             return page
         print("fail, is catpcha")
 
-def save_rewievs_from_page(page: BeautifulSoup, film_name: str):
+def save_rewievs_from_page(page: BeautifulSoup, film_name: str, good: bool):
     """Save rewievs for film from on of his page"""
     global configs
     rewievs = page.find_all('div', class_ = 'brand_words')
+    count_key="count_of_good_rewievs"
+    file_way = Template('dataset\\good\\${num}.txt')
+    if not good:
+        count_key = "count_of_bad_rewievs"
+        file_way = Template('dataset\\bad\\${num}.txt')
+
     for i, rewiev in enumerate(rewievs):
-        if configs["count_of_good_rewievs"]>=1000:
+        if configs[count_key]>=1000:
             break
-        configs["count_of_good_rewievs"]+=1
+        configs[count_key]+=1
         sync_configs()
-        num = format(configs["count_of_good_rewievs"], '04d')
-        with open(f'dataset\\good\\{num}.txt', 'w+', encoding='utf8') as file:
+        num = format(configs[count_key], '04d')
+        with open(file_way.substitute(num = num), 'w+', encoding='utf8') as file:
             file.write(film_name+'\n'+rewiev.text)
 
 
-def save_good_rewievs(film_id: str, film_name: str, stop_page: int = 0):
+def save_rewievs(film_id: str, film_name: str, good: bool):
     """saves good rewievs from one film"""
     global configs
-    link = good_reviews.substitute(film_id = film_id, page_num=configs["page_num"])
+    page_key = "page_num_good"
+    if good:
+        link = good_reviews.substitute(film_id = film_id, page_num=configs[page_key])
+    else:
+        page_key = "page_num_bad"
+        link = bad_reviews.substitute(film_id = film_id, page_num=configs[page_key])
     page = get_page(link)
     
     #парсим количество хороших отзывывов
     count_of_rewievs = page.find('div', class_ = 'pagesFromTo')
+    if count_of_rewievs is None:
+        return 0
     count_of_rewievs = count_of_rewievs.text
     count_of_rewievs = int(re.sub('\d+.\d+ из ', '', count_of_rewievs, count=0))
-    print(f"In film {film_name} {count_of_rewievs} good rewievs")
+    print(f"In film {film_name} {count_of_rewievs} {good} rewievs")
 
     #подсчет количества страниц с хорошими отзывами одного фильма ------#
     count_of_pages = 0
@@ -101,21 +114,21 @@ def save_good_rewievs(film_id: str, film_name: str, stop_page: int = 0):
             count_of_pages+=1
     else:
         count_of_pages = 1
-    print(f'Count of pages with good rewievs for film "{film_name}" is {count_of_pages}')
+    print(f'Count of pages with {good} rewievs for film "{film_name}" is {count_of_pages}')
     #------------------------------------------------------------------#
 
-    save_rewievs_from_page(page, film_name)
-    configs["page_num"]+=1
+    save_rewievs_from_page(page, film_name, good)
+    configs[page_key]+=1
     sync_configs()
-    page_num = configs["page_num"]
+    page_num = configs[page_key]
     for i in range(page_num, count_of_pages+1, 1):
         print(f"saving a {i} page")
         link = good_reviews.substitute(film_id = film_id, page_num=i)
         page = get_page(link)
-        save_rewievs_from_page(page, film_name)
-        configs["page_num"]+=1
+        save_rewievs_from_page(page, film_name, good)
+        configs[page_key]+=1
         sync_configs()
-    configs["page_num"]=1
+    configs[page_key]=1
     sync_configs()
 
         
@@ -125,5 +138,33 @@ if __name__=="__main__":
     films = {}
 with open('films.json', 'r') as file:
     films = json.load(file)
-save_good_rewievs("535341", films["535341"]['name'])
+
+#сохраняем хорошие рецензии
+for key in films.keys():
+    if configs["count_of_good_rewievs"] >=1000:
+        break
+    if configs["film_id"] == 0:
+        configs["film_id"] = key
+        sync_configs()
+    elif configs["film_id"] != key:
+        continue
+    save_rewievs(key, films[key]["name"], True)
+    configs["film_id"] = 0
+    sync_configs()
+    
+#сохраняем плохие рецензии
+for key in films.keys():
+    if configs["count_of_bad_rewievs"] >=1000:
+        break
+    if configs["film_id"] == 0:
+        configs["film_id"] = key
+        sync_configs()
+    elif configs["film_id"] != key:
+        continue
+    save_rewievs(key, films[key]["name"], False)
+    configs["film_id"] = 0
+    sync_configs()
+    
+
+
 
