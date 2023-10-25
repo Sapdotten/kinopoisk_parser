@@ -1,4 +1,5 @@
-﻿delay: 0 #int or "random"
-stop_film_id: 0 #фильм который парсился перед последним закрытием
-stop_count_good_rewievs: 0 #количество уже спарсенных хороших отзывов
-stop_page: 0 #страница, которую парсер просматривал последней
+count_of_good_rewievs: 0
+count_of_bad_rewievs: 0
+delay: 0
+film_id: 0
+page: 0
