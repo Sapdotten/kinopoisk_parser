@@ -136,35 +136,35 @@ if __name__=="__main__":
     get_configs()
     create_folders()
     films = {}
-with open('films.json', 'r') as file:
-    films = json.load(file)
+    with open('films.json', 'r') as file:
+        films = json.load(file)
 
-#сохраняем хорошие рецензии
-for key in films.keys():
-    if configs["count_of_good_rewievs"] >=1000:
-        break
-    if configs["film_id"] == 0:
-        configs["film_id"] = key
+    #сохраняем хорошие рецензии
+    for key in films.keys():
+        if configs["count_of_good_rewievs"] >=1000:
+            break
+        if configs["film_id"] == 0:
+            configs["film_id"] = key
+            sync_configs()
+        elif configs["film_id"] != key:
+            continue
+        save_rewievs(key, films[key]["name"], True)
+        configs["film_id"] = 0
         sync_configs()
-    elif configs["film_id"] != key:
-        continue
-    save_rewievs(key, films[key]["name"], True)
-    configs["film_id"] = 0
-    sync_configs()
-    
-#сохраняем плохие рецензии
-for key in films.keys():
-    if configs["count_of_bad_rewievs"] >=1000:
-        break
-    if configs["film_id"] == 0:
-        configs["film_id"] = key
+        
+    #сохраняем плохие рецензии
+    for key in films.keys():
+        if configs["count_of_bad_rewievs"] >=1000:
+            break
+        if configs["film_id"] == 0:
+            configs["film_id"] = key
+            sync_configs()
+        elif configs["film_id"] != key:
+            continue
+        save_rewievs(key, films[key]["name"], False)
+        configs["film_id"] = 0
         sync_configs()
-    elif configs["film_id"] != key:
-        continue
-    save_rewievs(key, films[key]["name"], False)
-    configs["film_id"] = 0
-    sync_configs()
-    
+        
 
 
 
