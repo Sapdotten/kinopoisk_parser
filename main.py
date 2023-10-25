@@ -7,8 +7,20 @@ import random
 import os
 import re
 import json
+import yaml
 
+def get_configs():
+    """retrieves the settings and breakpoint from the settings file"""
+    global configs
+    with open('config.yaml', 'r') as f:
+        configs = yaml.safe_load(f)
+        print(configs)
+
+
+
+#создание папок для датасета
 def create_folders():
+    """creates folders for datasets"""
     path_bad = os.path.join("dataset", "bad")
     if not os.path.isdir(path_bad):
         os.makedirs(path_bad)
@@ -16,10 +28,23 @@ def create_folders():
     if not os.path.isdir(path_good):
         os.makedirs(path_good)
 
+#рандомная задержка
 def slep():
-    delay = random.uniform(10, 60)
-    print(f'delay is: {delay}')
-    time.sleep(delay)
+    """makes a random or null delay"""
+    global configs
+    if configs['delay'] != 0:
+        delay = random.uniform(10, 60)
+        print(f'delay is: {delay}')
+        time.sleep(delay)
+    else: 
+        print('delay is null')
+
+def sync_configs():
+    """saves current configs to the config file"""
+    global configs
+    with open("config.yaml", "w") as f:
+        yaml.safe_dump(configs, f)
+        
     
 
 
@@ -29,61 +54,65 @@ url = "https://www.kinopoisk.ru/top/navigator/m_act[rating]/1%3A/order/num_vote/
 chrome = UserAgent().chrome
 
 def get_page(link: str) -> str:
+    """return a html of page with rewievs"""
     global chrome
     slep()
     html_text = requests.get(link, headers={'User-Agent': chrome}).text
     return html_text
 
+def save_rewievs_from_page(page: BeautifulSoup, film_name: str):
+    """Save rewievs for film from on of his page"""
+    global configs
+    rewievs = page.find_all('div', class_ = 'brand_words')
+    for i, rewiev in enumerate(rewievs):
+        if configs["count_of_good_rewievs"]>=1000:
+            break
+        configs["count_of_good_rewievs"]+=1
+        sync_configs()
+        num = format(i+configs["count_of_good_rewievs"], '04d')
+        with open(f'dataset\\good\\{num}.txt', 'w+', encoding='utf8') as file:
+            file.write(film_name+'\n'+rewiev.text)
 
-    
-create_folders()
-films = {}
+def save_good_rewievs(film_id: str, film_name: str, stop_page: int = 0):
+    html = ''
+    page = None
+    count_of_rewievs = 0
+    while True:
+        link = good_reviews.substitute(film_id = film_id, page_num =1)
+        html = get_page(link)
+        print(f"try to get page of {film_name}")
+        page = BeautifulSoup(html, 'lxml')
+        count_of_rewievs = page.find('div', class_ = 'pagesFromTo')
+        if count_of_rewievs is not None:
+            sync_configs()
+            break
+    count_of_rewievs = count_of_rewievs.text
+    count_of_rewievs = int(re.sub('\d+.\d+ из ', '', count_of_rewievs, count=0))
+    print(f"In film {film_name} {count_of_rewievs} good rewievs")
+
+    #подсчет количества страниц одного фильма
+    count_of_pages = 0
+    if count_of_rewievs>=200:
+        count_of_pages = count_of_rewievs//200 #получаем количетсво страниц с отзывами
+        if count_of_pages > count_of_rewievs*200:
+            count_of_pages+=1
+    else:
+        count_of_pages = 1
+    ####
+
+    print(f"Count of pages with good rewievs for film {film_name} is {count_of_pages}")
+    rewievs = page.find_all('div', class_ = 'brand_words')
+    for i, rewiev in enumerate(rewievs):
+
+        
+
+
+
+
+if __name__=="__main__":
+    get_configs()
+    create_folders()
+    films = {}
 with open('films.json', 'r') as file:
     films = json.load(file)
-
-count_of_good_revs = 0
-for film_id in films.keys():
-    html = ''
-    soup = None
-    rev_count = 0
-    while True:
-        link = good_reviews.substitute(film_id = film_id, page_num=1)
-        html = get_page(link)
-        print(f'film_id: {film_id}')
-        soup = BeautifulSoup(html,'lxml')
-        rev_count = soup.find('div', class_ = 'pagesFromTo')
-        print(rev_count)
-        if rev_count is not None:
-            rev_count = rev_count.text
-            count_of_good_revs+=50
-            break
-    rev_count = int(re.sub('\d+.\d+ из ', '', rev_count, count=0))
-    print(rev_count)
-    pages_count = rev_count//200
-    if rev_count>pages_count*200:
-        pages_count+=1
-    print(f"pages_count: {pages_count}")
-
-    good_revs = soup.find_all('div', class_ = 'brand_words')
-    print(f"good_revs: {good_revs[0]}")
-    for i, rev in enumerate(good_revs):
-        num = format(i, '04d')
-        with open(f'dataset\\good\\{num}.txt', 'w+', encoding='utf8') as file:
-            file.write(films[film_id]['name']+'\n'+rev.text)
-
-    for i in range(2, pages_count+1):
-        while True:
-            link = good_reviews.substitute(film_id = film_id, page_num=i)
-            html = get_page(link)
-            soup = BeautifulSoup(html,'lxml')
-            test = soup.find('div', class_ ='pagesFromTo')
-            print(test)
-            if test is not None:
-                count_of_good_revs+=50
-                break
-        good_revs = soup.find_all('div', class_ = 'brand_words')
-        for j, rev in enumerate(good_revs):
-            num = format((i-1)*200+j, '04d')
-            with open(f'dataset\\good\\{num}.txt', 'w+', encoding='utf8') as file:
-                file.write(films[film_id]['name']+'\n'+rev.text)
-            
+    save_good_rews("1143242", films["1143242"]['name'])
