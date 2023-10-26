@@ -1,5 +1,6 @@
-﻿.txt
-.ini
+﻿*.txt
+*.ini
 test.py
-.vscode
+*.vscode
 settins.json
+*.csv
