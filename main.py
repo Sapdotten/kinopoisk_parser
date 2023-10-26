@@ -8,7 +8,6 @@ import os
 import re
 import json
 import yaml
-from typing import Union
 
 def get_configs():
     """retrieves the settings and breakpoint from the settings file"""
@@ -37,8 +36,6 @@ def slep():
         delay = random.uniform(10, 60)
         print(f'delay is: {delay}')
         time.sleep(delay)
-    else: 
-        print('delay is null')
 
 def sync_configs():
     """saves current configs to the config file"""
