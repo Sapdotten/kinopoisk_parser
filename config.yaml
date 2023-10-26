@@ -1,6 +1,6 @@
-count_of_bad_rewievs: 1000
-count_of_good_rewievs: 1000
+count_of_bad_rewievs: 1000 #кол-во спарсенных плохих рецензий
+count_of_good_rewievs: 1000 #кол-во спарсенных хороших рецензий
 delay: 0
-film_id: 0
+film_id: "258687"
 page_num_bad: 1
 page_num_good: 6
