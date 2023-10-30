@@ -5,7 +5,7 @@ import csv
 from task_1 import add_line
 
 
-def create_dir(dir: path) -> None:
+def create_dir(dir: str) -> None:
     """Creates a new directory if it doesn't exist
 
     Args:
@@ -14,7 +14,7 @@ def create_dir(dir: path) -> None:
     if not os.path.isdir(dir):
         os.makedirs(dir)
 
-def copy_file(old_path: path, new_path: path):
+def copy_file(old_path: str, new_path: str):
     """copies file from old dir to new dir
 
     Args:
@@ -23,7 +23,7 @@ def copy_file(old_path: path, new_path: path):
     """
     os.system(f'copy {old_path} {new_path}')
 
-def copy_dataset(new_dir: os.path) -> None:
+def copy_dataset(new_dir: str) -> None:
     """Copies a dataset to new directory
 
     Args:

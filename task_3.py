@@ -1,4 +1,3 @@
-import os
 from os.path import join
 from os import listdir, path
 from task_1 import add_line
@@ -27,11 +26,11 @@ def get_name()->str:
     num = RandomNumber.get_number()
     return format(num, '04d')+'.txt'
 
-def copy_dataset(new_dir: path) -> None:
+def copy_dataset(new_dir: str) -> None:
     """Copies a dataset to new directory with new random names
 
     Args:
-        new_dir (os.path): new directory of dataset
+        new_dir (str): new directory of dataset
     """
     classes = ["good", "bad"]
     create_dir(new_dir)

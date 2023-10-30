@@ -3,7 +3,7 @@ from os import listdir, path
 from os.path import  join, abspath
 
 
-def add_line(annotation_file: path, path_: path, class_name: str) -> None:
+def add_line(annotation_file: str, path_: str, class_name: str) -> None:
     """Add a line about file to .csv file
 
     Args:
@@ -15,7 +15,7 @@ def add_line(annotation_file: path, path_: path, class_name: str) -> None:
         fw = csv.writer(file, delimiter = ",", lineterminator="\r")
         fw.writerow([abspath(path_), path_, class_name])
 
-def make_annotation(annotation_file: path) -> None:
+def make_annotation(annotation_file: str) -> None:
     """Build an annotation file
 
     Args:
