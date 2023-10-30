@@ -31,5 +31,5 @@ def make_annotation(annotation_file: path) -> None:
         
 
 if __name__ == "__main__":
-    make_annotation("annotation.csv")
+    make_annotation("task_1_annotation.csv")
     print("Annotation is done")
