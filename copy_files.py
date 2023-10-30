@@ -4,11 +4,11 @@ from os import listdir, path
 import csv
 
 def add_line(annotation_file: path, path_: path, class_name: str) -> None:
-    """Add a line about copied file to .csv file
+    """Add a line about file to .csv file
 
     Args:
         annotation_file (path): path to annotation file
-        path_ (path): path to copied file of dataset
+        path_ (path): path to  file of dataset
         class_name (str): name of class of file
     """
     with open(annotation_file, 'a+') as file:
@@ -24,6 +24,15 @@ def create_dir(dir: path) -> None:
     if not os.path.isdir(dir):
         os.makedirs(dir)
 
+def copy_file(old_path: path, new_path: path):
+    """copies file from old dir to new dir
+
+    Args:
+        old_path (path): path copy from
+        new_path (path): path copy to
+    """
+    os.system(f'copy {old_path} {new_path}')
+
 def copy_dataset(new_dir: os.path) -> None:
     """Copies a dataset to new directory
 
@@ -38,7 +47,7 @@ def copy_dataset(new_dir: os.path) -> None:
         for elem in listdir(dir):
             new_path = join(new_dir, class_+'_'+elem)
             old_path = join(dir, elem)
-            os.system(f'copy {old_path} {new_path}')
+            copy_file(old_path, new_path)
             add_line("copies_annotation.csv", new_path, class_)
 
 
