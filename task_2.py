@@ -2,18 +2,8 @@ import os
 from os.path import join, abspath
 from os import listdir, path
 import csv
+from task_1 import add_line
 
-def add_line(annotation_file: path, path_: path, class_name: str) -> None:
-    """Add a line about file to .csv file
-
-    Args:
-        annotation_file (path): path to annotation file
-        path_ (path): path to  file of dataset
-        class_name (str): name of class of file
-    """
-    with open(annotation_file, 'a+') as file:
-        fw = csv.writer(file, delimiter = ",", lineterminator="\r")
-        fw.writerow([abspath(path_), path_, class_name])
 
 def create_dir(dir: path) -> None:
     """Creates a new directory if it doesn't exist
