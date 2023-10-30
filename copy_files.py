@@ -1,32 +1,45 @@
 import os
 from os.path import join, abspath
-from os import listdir
+from os import listdir, path
 import csv
 
-def annotation(file_name: str,data: list[list]):
-    with open(file_name, 'w') as f:
-        fw = csv.writer(f, delimiter = ",", lineterminator="\r")
-        for elem in data:
-            fw.writerow(elem)
+def add_line(annotation_file: path, path_: path, class_name: str) -> None:
+    """Add a line about copied file to .csv file
 
-def copy_dataset(new_directory: os.path):
-    good_dir = join("dataset", "good")
-    bad_dir = join("dataset", "bad")
-    path = os.path.join(new_directory)
-    if not os.path.isdir(path):
-        os.makedirs(path)
-    annot = []
-    for elem in listdir(good_dir):
-        rel_new_dir = join(new_directory, "good_"+elem)
-        abs_new_dir = abspath(rel_new_dir)
-        os.system(f'copy {abspath(join(good_dir, elem))} {abs_new_dir}')
-        annot.append([abs_new_dir, rel_new_dir, "good"])
-    for elem in listdir(good_dir):
-        rel_new_dir = join(new_directory, "bad_"+elem)
-        abs_new_dir = abspath(rel_new_dir)
-        os.system(f'copy {abspath(join(good_dir, elem))} {abspath(join(new_directory, "bad_"+elem))}')
-        annot.append([abs_new_dir, rel_new_dir, "bad"])
-    annotation("new_directory"+"_annot.csv", annot)
+    Args:
+        annotation_file (path): path to annotation file
+        path_ (path): path to copied file of dataset
+        class_name (str): name of class of file
+    """
+    with open(annotation_file, 'a+') as file:
+        fw = csv.writer(file, delimiter = ",", lineterminator="\r")
+        fw.writerow([abspath(path_), path_, class_name])
+
+def create_dir(dir: path) -> None:
+    """Creates a new directory if it doesn't exist
+
+    Args:
+        dir (path): path for directory
+    """
+    if not os.path.isdir(dir):
+        os.makedirs(dir)
+
+def copy_dataset(new_dir: os.path) -> None:
+    """Copies a dataset to new directory
+
+    Args:
+        new_dir (os.path): new directory of dataset
+    """
+    classes = ["good", "bad"]
+    create_dir(new_dir)
+
+    for class_ in classes:
+        dir = join('dataset', class_)
+        for elem in listdir(dir):
+            new_path = join(new_dir, class_+'_'+elem)
+            old_path = join(dir, elem)
+            os.system(f'copy {old_path} {new_path}')
+            add_line("copies_annotation.csv", new_path, class_)
 
 
 if __name__=="__main__":
