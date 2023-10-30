@@ -38,8 +38,8 @@ def copy_dataset(new_dir: os.path) -> None:
             new_path = join(new_dir, class_+'_'+elem)
             old_path = join(dir, elem)
             copy_file(old_path, new_path)
-            add_line("copies_annotation.csv", new_path, class_)
+            add_line("task_2_annotation.csv", new_path, class_)
 
 
 if __name__=="__main__":
-    copy_dataset((join("new_dataset")))
+    copy_dataset((join("task_2_datset")))
