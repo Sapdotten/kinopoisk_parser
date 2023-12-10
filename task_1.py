@@ -1,6 +1,6 @@
 import csv
-from os import listdir, path
-from os.path import  join, abspath
+from os import listdir
+from os.path import join, abspath
 
 
 def add_line(annotation_file: str, path_: str, class_name: str) -> None:
@@ -12,10 +12,11 @@ def add_line(annotation_file: str, path_: str, class_name: str) -> None:
         class_name (str): name of class of file
     """
     with open(annotation_file, 'a+') as file:
-        fw = csv.writer(file, delimiter = ",", lineterminator="\r")
+        fw = csv.writer(file, delimiter=",", lineterminator="\r")
         fw.writerow([abspath(path_), path_, class_name])
 
-def make_annotation(annotation_file: str) -> None:
+
+def make_annotation(annotation_file: str, dataset_dir: str) -> None:
     """Build an annotation file
 
     Args:
@@ -25,10 +26,8 @@ def make_annotation(annotation_file: str) -> None:
     for class_ in classes:
         dir = join('dataset', class_)
         for elem in listdir(dir):
-            add_line(annotation_file, join(dir, elem), class_)
+            add_line(annotation_file, dataset_dir, class_)
 
-    
-        
 
 if __name__ == "__main__":
     make_annotation("task_1_annotation.csv")
