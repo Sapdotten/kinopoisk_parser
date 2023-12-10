@@ -1,6 +1,6 @@
 import csv
 from os import listdir
-from os.path import join, abspath
+from os.path import join, abspath, relpath, dirname
 
 
 def add_line(annotation_file: str, path_: str, class_name: str) -> None:
@@ -11,9 +11,11 @@ def add_line(annotation_file: str, path_: str, class_name: str) -> None:
         path_ (path): path to file of dataset
         class_name (str): name of class of file
     """
+    annot_dir = dirname(annotation_file)
     with open(annotation_file, 'a+') as file:
         fw = csv.writer(file, delimiter=",", lineterminator="\r")
-        fw.writerow([abspath(path_), path_, class_name])
+        fw.writerow([abspath(path_), relpath(
+            path_, annot_dir), class_name])
 
 
 def make_annotation(annotation_file: str, dataset_dir: str) -> None:
@@ -23,6 +25,7 @@ def make_annotation(annotation_file: str, dataset_dir: str) -> None:
         annotation_file (path): dir where will be saved annotation
     """
     classes = ["good", "bad"]
+    open(annotation_file, 'w').close()
     for class_ in classes:
         dir = join('dataset', class_)
         for elem in listdir(dir):
