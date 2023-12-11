@@ -2,13 +2,14 @@
 # -*- coding: utf-8 -*-
 
 import sys
-from PyQt5.QtWidgets import QPushButton, QApplication, QFileDialog, QMainWindow, QLabel, QHBoxLayout, QVBoxLayout, QWidget, QMessageBox
-from PyQt5.QtCore import QCoreApplication
-from PyQt5.QtGui import QIcon
+from PyQt5.QtWidgets import QPushButton, QApplication, QFileDialog, QMainWindow, QLabel, QHBoxLayout, QVBoxLayout, QWidget, QMessageBox, QScrollArea, QSizePolicy, QGraphicsDropShadowEffect
+from PyQt5.QtCore import QCoreApplication, Qt
+from PyQt5.QtGui import QIcon, QFont, QColor
 from task_2 import copy_dataset
 from os import path
 from pathlib import Path
 from task_1 import make_annotation
+from task_5 import FilesIterator
 
 
 class Example(QMainWindow):
@@ -16,17 +17,19 @@ class Example(QMainWindow):
 
     def __init__(self):
         super().__init__()
-
+        self.bad_iter = None
+        self.good_iter = None
         self.initUI()
 
     def initUI(self):
+
         self.setGeometry(1000, 200, 600, 800)
+        self.setStyleSheet("background-color: #303956")
         self.setWindowTitle('Dataset Manager')
         self.setWindowIcon(QIcon('src/app_icon.png'))
         if not self.dataset_dir:
-            self.get_dataset_btn = QPushButton('Выбрать папку с датасетом...')
-            self.get_dataset_btn.resize(self.get_dataset_btn.sizeHint())
-            self.get_dataset_btn.clicked.connect(self.init_dataset)
+            self.get_dataset_btn = self.create_button(
+                'Выбрать папку с датасетом...', self.init_dataset)
             widget = QWidget()
             hbox = QHBoxLayout(widget)
             hbox.addStretch(1)
@@ -37,40 +40,54 @@ class Example(QMainWindow):
         self.show()
 
     def changeUI(self):
-        next_button = QPushButton('Следующий отзыв')
-        previous_button = QPushButton('Предыдщий отзыв')
-        quit_button = QPushButton('Выход')
-        quit_button.clicked.connect(QCoreApplication.instance().quit)
-        quit_button.resize(quit_button.sizeHint())
 
-        annotation_button = QPushButton('Создать аннотацию')
-        annotation_button.clicked.connect(self.make_annotation)
-        annotation_button.resize(annotation_button.sizeHint())
+        next_good_button = self.create_button(
+            'Следующая положительная аннотация', self.next_good_review)
+        next_bad_button = self.create_button(
+            'Следующая отрицательная аннотация', self.next_bad_review)
+        quit_button = self.create_button(
+            'Выход', QCoreApplication.instance().quit)
 
-        copy_button = QPushButton('Копировать датасет...')
-        copy_button.clicked.connect(self.copy_dataset)
-        copy_button.resize(copy_button.sizeHint())
+        annotation_button = self.create_button(
+            'Создать аннотацию', self.make_annotation)
 
-        self.statusBar().showMessage('Ready')
-
-        self.setWindowTitle('Quit button')
+        copy_button = self.create_button(
+            'Копировать датасет...', self.copy_dataset)
         widget = QWidget()
-        self.label = QLabel()
+        widget.setStyleSheet("background-color: #303956;")
+
+        scroll_area = QScrollArea()
+        scroll_area.setStyleSheet("""
+                                  background-color:#416E97;
+                                  border-radius: 10px;""")
+        scroll_area.verticalScrollBar().setStyleSheet(
+            "background-color: #A8D0DC; border-radius: 5px;")
+        shadow = QGraphicsDropShadowEffect(
+            blurRadius=7, xOffset=3, yOffset=3, color=QColor("#202959"))
+        scroll_area.setGraphicsEffect(shadow)
+        # scroll_area.verticalScrollBar().
+        scroll_area.setWidgetResizable(True)
+        self.label = QLabel(scroll_area)
+        self.label.setStyleSheet(
+            "background-color: #416E97;padding :15px; color: #D9E7E8;")
+        self.label.setFont(QFont('Consolas', 15))
+        scroll_area.setWidget(self.label)
+        self.label.setAlignment(Qt.AlignLeft | Qt.AlignTop)
         self.label.setWordWrap(True)
-        self.label.setGeometry(200, 150, 100, 50)
-        with open('dataset\\good\\0001.txt', encoding='utf-8') as f:
-            self.label.setText(f.read())
+        # self.label.setGeometry(
+        # 0, 0, 400, scroll_area.height())
+        scroll_area.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 
-        hbox = QHBoxLayout()
-        hbox.addWidget(previous_button)
-        hbox.addWidget(next_button)
+        hbox = QVBoxLayout()
+        hbox.addWidget(next_good_button)
+        hbox.addWidget(next_bad_button)
 
-        textbox = QHBoxLayout()
-        textbox.addWidget(self.label)
+        # textbox = QVBoxLayout()
+        # textbox.addWidget(scroll_area)
 
         vrbox = QVBoxLayout()
-        vrbox.addLayout(textbox)
-        vrbox.addStretch(1)
+        vrbox.addWidget(scroll_area)
+        # vrbox.addStretch()
         vrbox.addLayout(hbox)
 
         btnvbox = QVBoxLayout()
@@ -125,6 +142,66 @@ class Example(QMainWindow):
             None, "Save file", ".", "CSV Files (*.csv)")
         if annotation_file[0]:
             make_annotation(annotation_file[0], self.dataset_dir)
+
+    def next_good_review(self):
+        if not self.good_iter:
+            self.good_iter = FilesIterator(self.dataset_dir, 'good')
+        try:
+            file_ = next(self.good_iter)
+            with open(file_, 'r', encoding='utf-8') as file:
+                self.label.setText(file.read())
+        except StopIteration:
+            self.warning_end_of_files('good')
+
+    def next_bad_review(self):
+        if not self.bad_iter:
+            self.bad_iter = FilesIterator(self.dataset_dir, 'bad')
+        try:
+            file_ = next(self.bad_iter)
+            with open(file_, 'r', encoding='utf-8') as file:
+                self.label.setText(file.read())
+        except StopIteration:
+            self.warning_end_of_files('bad')
+
+    def create_button(self, text: str, func) -> QPushButton:
+        button = QPushButton(text)
+        button.clicked.connect(func)
+        button
+        button.resize(button.minimumSizeHint())
+        button.setStyleSheet("""
+                             background-color: #E3474B;
+                             color: #D9E7E8;
+                             font-size: 20px;
+                             padding: 10px 10px 10px 10px;
+                             border-radius: 5px;
+                             background-color: qlineargradient(x1: 0, y1: 0, x2: 1, y2: 1,
+stop: 0 #E3474B, stop: 1 #6E2734);""")
+        shadow = QGraphicsDropShadowEffect(
+            blurRadius=7, xOffset=3, yOffset=3, color=QColor("#31021F"))
+        button.setGraphicsEffect(shadow)
+        button.setFont(QFont('FreeMono, monospace', 15))
+        return button
+
+    def warning_end_of_files(self, class_):
+        msg = QMessageBox()
+        msg.setIcon(QMessageBox.Warning)
+        review_type = 'положительные'
+        if class_ == 'bad':
+            review_type = 'отрицательные'
+
+        msg.setText(
+            f"Мы показали вам все {review_type} рецензии")
+        msg.setWindowTitle('Конец рецензий')
+        msg.setStandardButtons(QMessageBox.Cancel)
+        dataset_btn = msg.addButton(
+            f"Начать просмотр {review_type[:-1]+'х'} рецензий заново", QMessageBox.YesRole)
+        if class_ == 'good':
+            self.good_iter = None
+            dataset_btn.clicked.connect(self.next_good_review)
+        else:
+            self.bad_iter = None
+            dataset_btn.clicked.connect(self.next_bad_review)
+        retval = msg.exec_()
 
 
 if __name__ == '__main__':
