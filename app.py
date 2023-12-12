@@ -3,13 +3,14 @@
 
 import sys
 from PyQt5.QtWidgets import QPushButton, QApplication, QFileDialog, QMainWindow, QLabel, QHBoxLayout, QVBoxLayout, QWidget, QMessageBox, QScrollArea, QSizePolicy, QGraphicsDropShadowEffect
-from PyQt5.QtCore import QCoreApplication, Qt
-from PyQt5.QtGui import QIcon, QFont, QColor
+from PyQt5.QtCore import QCoreApplication, Qt, QRect, QSize
+from PyQt5.QtGui import QIcon, QFont, QColor, QMovie
 from task_2 import copy_dataset
 from os import path
 from pathlib import Path
 from task_1 import make_annotation
 from task_5 import FilesIterator
+from task_3 import copy_dataset as copy_dataset_random
 
 
 class Example(QMainWindow):
@@ -23,7 +24,7 @@ class Example(QMainWindow):
 
     def initUI(self):
 
-        self.setGeometry(1000, 200, 600, 800)
+        self.setGeometry(300, 300, 800, 600)
         self.setStyleSheet("background-color: #303956")
         self.setWindowTitle('Dataset Manager')
         self.setWindowIcon(QIcon('src/app_icon.png'))
@@ -51,8 +52,10 @@ class Example(QMainWindow):
         annotation_button = self.create_button(
             'Создать аннотацию', self.make_annotation)
 
-        copy_button = self.create_button(
-            'Копировать датасет...', self.copy_dataset)
+        copy_button_1 = self.create_button(
+            'Копировать датасет \nс указанием класса', self.copy_dataset_1)
+        copy_button_2 = self.create_button(
+            'Копировать датасет со\n случайными номерами файлов', self.copy_dataset_2)
         widget = QWidget()
         widget.setStyleSheet("background-color: #303956;")
 
@@ -74,6 +77,7 @@ class Example(QMainWindow):
         scroll_area.setWidget(self.label)
         self.label.setAlignment(Qt.AlignLeft | Qt.AlignTop)
         self.label.setWordWrap(True)
+        self.label.setText("Здесь будет отображаться текст рецензии...")
         # self.label.setGeometry(
         # 0, 0, 400, scroll_area.height())
         scroll_area.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
@@ -92,7 +96,8 @@ class Example(QMainWindow):
 
         btnvbox = QVBoxLayout()
         btnvbox.addWidget(annotation_button)
-        btnvbox.addWidget(copy_button)
+        btnvbox.addWidget(copy_button_1)
+        btnvbox.addWidget(copy_button_2)
         btnvbox.addWidget(quit_button)
         btnvbox.addStretch(1)
 
@@ -123,14 +128,35 @@ class Example(QMainWindow):
             dataset_btn.clicked.connect(self.init_dataset)
             retval = msg.exec_()
 
-    def copy_dataset(self):
+    def copy_dataset_1(self):
         if not self.dataset_dir:
             self.get_dataset()
+        new_dir = None
+        annoatation_file = None
         new_dir = QFileDialog.getExistingDirectory(
             self, 'Выберите папку, в которую необходимо скопировать датасет')
-        new_dir = path.join(*(new_dir.split('/')))
-        new_dir = new_dir.replace("C:", "C:\\")
-        copy_dataset(self.dataset_dir, new_dir)
+        if len(new_dir) != 0:
+            annotation_file = QFileDialog.getSaveFileName(
+                None, "Выберите куда сохранить аннотацию к скопированному датасету", ".", "CSV Files (*.csv)")[0]
+            if len(annotation_file) != 0:
+                new_dir = path.join(*(new_dir.split('/')))
+                new_dir = new_dir.replace("C:", "C:\\")
+                copy_dataset(self.dataset_dir, new_dir, annotation_file)
+
+    def copy_dataset_2(self):
+        if not self.dataset_dir:
+            self.get_dataset()
+        new_dir = None
+        annotation_file = None
+        new_dir = QFileDialog.getExistingDirectory(
+            self, 'Выберите папку, в которую необходимо скопировать датасет')
+        if len(new_dir) != 0:
+            annotation_file = QFileDialog.getSaveFileName(
+                None, "Выберите куда сохранить аннотацию к скопированному датасету", ".", "CSV Files (*.csv)")[0]
+            if len(annotation_file) != 0:
+                new_dir = path.join(*(new_dir.split('/')))
+                new_dir = new_dir.replace("C:", "C:\\")
+                copy_dataset_random(self.dataset_dir, new_dir, annotation_file)
 
     def dataset_exists(self) -> bool:
         if not path.exists(path.join(self.dataset_dir, 'bad')) or not path.exists(path.join(self.dataset_dir, 'good')):
